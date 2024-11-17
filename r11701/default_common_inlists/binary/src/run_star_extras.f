@@ -1584,7 +1584,7 @@ subroutine loop_conv_layers(s,n_conv_regions_posydon, n_zones_of_region, bot_bdy
               (s% he_core_mass - s% c_core_mass >= 1d-1) .or. &
               (s% center_he4 >= 1d-6)) then ! exclude stars at TPAGB, cf. check for it in subroutine other_set_mdot
             if (surface_h1 >= 0.1d0) then ! exclude stripped He stars
-              current_wind_prscr(id) = 6d0
+              current_wind_prscr = 6d0
               wind  = max(1.0d-4, wind)
               if (dbg) write(*,1) 'LBV Belczynski+2010 wind', wind
             endif
