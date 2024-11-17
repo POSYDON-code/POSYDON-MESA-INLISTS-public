@@ -145,8 +145,7 @@
          osep = b% separation
          q = b% m(b% d_i) / b% m(b% a_i)
          M = b% m(b% d_i) + b% m(b% a_i)
-         !rA1 = eval_rlobe(b% m(b% d_i), b% m(b% a_i), osep)
-         rA1 = b% r(b% d_i) ! donor radius
+         rA1 = eval_rlobe(b% m(b% d_i), b% m(b% a_i), osep)
          gamma_iso = q  ! isotropic re-emission, lost from accretor
          ang_mom_j = b% angular_momentum_j
          m1dot_rlo = b% mtransfer_rate
@@ -220,8 +219,7 @@
          osep = b% separation
          q = b% m(b% d_i) / b% m(b% a_i)
          M = b% m(b% d_i) + b% m(b% a_i)
-         !rA1 = eval_rlobe(b% m(b% d_i), b% m(b% a_i), osep)
-         rA1 = b% r(b% d_i) ! donor radius
+         rA1 = eval_rlobe(b% m(b% d_i), b% m(b% a_i), osep)
          gamma_iso = q  ! isotropic re-emission, lost from accretor
 
          xfer_frac_rlo = b% xfer_fraction
@@ -1360,12 +1358,20 @@
            i_don = 2
          end if
           ! Binary evolution
-          b% do_jdot_mb = .true.
-          b% do_jdot_gr = .true.
+	  ! Simple case should have no evolution except for jdot_ML because it inlcudes eMT
+          b% do_jdot_mb = .false.
+          b% do_jdot_gr = .false.
           b% do_jdot_ml = .true.
-          b% do_jdot_ls = .true.
-          b% do_jdot_missing_wind = .true.
-          b% do_j_accretion = .true.
+          b% do_jdot_ls = .false.
+          b% do_jdot_missing_wind = .false.
+          b% do_j_accretion = .false.
+
+          ! Keep tidal circ off
+          b% do_tidal_circ = .false.
+          ! Eccentric RLO MT
+          b% use_other_extra_edot = .true.
+          b% use_other_jdot_ml = .true.
+
        end if
 
       end function extras_binary_check_model
