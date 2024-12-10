@@ -33,6 +33,10 @@
 
       implicit none
 
+      real(dp) :: binary_component_vars(2,30) = 0d0
+      real(dp) :: binary_vars(30) = 0d0
+      logical :: mass_transfer_check = .false.
+
       contains
 
       subroutine extras_binary_controls(binary_id, ierr)
@@ -1145,7 +1149,20 @@
             end if
          end if
          extras_binary_startup = keep_going
-      end function  extras_binary_startup
+
+         ! initial store of default inlist values
+         if (b% point_mass_i /= 1) then
+            binary_component_vars(1, 1) = b% s1% delta_lgT_limit
+            binary_component_vars(1, 2) = b% s1% delta_lgTeff_limit
+         end if
+         if (b% point_mass_i /= 2) then
+               binary_component_vars(2, 1) = b% s2% delta_lgT_limit
+               binary_component_vars(2, 2) = b% s2% delta_lgTeff_limit
+         end if
+         binary_vars(1) = b% fm
+         mass_transfer_check = .true.
+
+         end function  extras_binary_startup
 
       !Return either rety,backup,keep_going or terminate
       integer function extras_binary_check_model(binary_id)
@@ -1185,12 +1202,12 @@
          type (binary_info), pointer :: b
          integer, intent(in) :: binary_id
          integer:: i_don, i_acc
-	 real(dp) :: r_l2, d_l2
+	      real(dp) :: r_l2, d_l2
          integer :: ierr, star_id, i
          real(dp) :: q, mdot_limit_low, mdot_limit_high, &
             center_h1, center_h1_old, center_he4, center_he4_old, &
-            rl23,rl2_1,trap_rad, mdot_edd
-         logical :: is_ne_biggest
+            rl23,rl2_1,trap_rad, mdot_edd, tau_kh, tau_macc
+         logical :: is_ne_biggest, superthermal_accretion, s1_rlof, s2_rlof
 
          extras_binary_finish_step = keep_going
 
@@ -1434,18 +1451,104 @@
             end if
          end if
 	 
-	 if (b% point_mass_i == 0) then
-             if (b% s_accretor% x_logical_ctrl(4)) then
-                if (b% s_accretor% w_div_w_crit_avg_surf >= 0.97d0 .and. b% d_i == 2) then
-	            b% mass_transfer_beta = 1.0d0
-                    b% s_accretor% max_wind = 1d-12
-	        end if
-	        if (b% mass_transfer_beta == 1.0d0 .and. abs(b% mtransfer_rate/(Msun/secyer)) <= 1d-7) then
-	            b% mass_transfer_beta = 0d0
-	            b% s_accretor% max_wind = 0d0
-	        end if
-             end if
-	 end if
+      if (b% point_mass_i == 0) then
+               if (b% s_accretor% x_logical_ctrl(4)) then
+                  if (b% s_accretor% w_div_w_crit_avg_surf >= 0.97d0 .and. b% d_i == 2) then
+                  b% mass_transfer_beta = 1.0d0
+                     b% s_accretor% max_wind = 1d-12
+            end if
+            if (b% mass_transfer_beta == 1.0d0 .and. abs(b% mtransfer_rate/(Msun/secyer)) <= 1d-7) then
+                  b% mass_transfer_beta = 0d0
+                  b% s_accretor% max_wind = 0d0
+            end if
+               end if
+      end if
+
+      ! conditions to check for termination in the case of superthermal accretion w/ contact and
+      ! critical rotation + accretion disk
+      if (b% point_mass_i /= b% a_i) then
+         tau_macc = b% s_accretor% star_mass/abs(b% s_accretor% mstar_dot/Msun*secyer)
+         tau_kh = b% s_accretor% kh_timescale
+         ! (via experimentation, we can follow evolution up to about when this ratio is 1/50)
+         ! Pols & Marinus 1994, A&A, 288, 475 cite effects kicking in as early as a ratio of 1/10
+         if (tau_macc / tau_kh < 0.02d0) then
+            superthermal_accretion = .true.
+         else
+            superthermal_accretion = .false.
+         end if
+         if (superthermal_accretion) then
+            ! condition to check for a contact binary
+            if (b% point_mass_i /= b% d_i) then
+               if ((b% r(b% d_i) .ge. b% rl(b% d_i)) .and. (b% r(b% a_i) .ge. b% rl(b% a_i))) then
+                  extras_binary_finish_step = terminate
+                  write(*,'(g0)') 'termination code: Both stars fill their Roche Lobe and t_kh > t_acc'
+                  return
+               end if
+            end if
+            ! check if accretor is accreting at a superthermal rate and critically rotating 
+            ! (decretion + expansion due to rapid accretion, here we are assuming this leads to L2 overflow)
+            if (superthermal_accretion .and. &
+               (b% s_accretor% w_div_w_crit_avg_surf >= 0.99d0*b% s_accretor% surf_w_div_w_crit_limit)) then
+               ! terminate as a case of L2 overflow
+               extras_binary_finish_step = terminate
+               if (b% d_i == 1) then
+                  write(*,'(g0)') 'termination code: overflow from L2, t_kh > t_acc and w > w_crit_lim, donor is star 1'
+               else
+                  write(*,'(g0)') 'termination code: overflow from L2, t_kh > t_acc and w > w_crit_lim, donor is star 2'
+               end if
+   
+               return
+   
+            end if
+         end if
+      end if
+      ! adjust timestep controls during mass transfer
+      s1_rlof = .false.
+      s2_rlof = .false.
+      if (b% point_mass_i /= 1) then
+         s1_rlof = b% rl_relative_gap(1) .ge. 0.0d0
+      end if
+      if (b% point_mass_i /= 2) then
+         s2_rlof = b% rl_relative_gap(2) .ge. 0.0d0
+      end if
+      if ( (s1_rlof .or. s2_rlof) .or. (abs(b% mtransfer_rate/(Msun/secyer)) .ge. 1.0d-10) ) then
+         ! store default inlist values for current donor/accretor
+         if (mass_transfer_check) then 
+            if (b% point_mass_i /= 1) then
+               binary_component_vars(1, 1) = b% s1% delta_lgT_limit
+               binary_component_vars(1, 2) = b% s1% delta_lgTeff_limit
+            end if
+            if (b% point_mass_i /= 2) then
+               binary_component_vars(2, 1) = b% s2% delta_lgT_limit
+               binary_component_vars(2, 2) = b% s2% delta_lgTeff_limit
+            end if
+            binary_vars(1) = b% fm
+            mass_transfer_check = .false.
+         end if
+         ! timestep controls based on variation of Teff or cell-wise T (temperature)
+         if (b% point_mass_i /= 1) then
+            b% s1% delta_lgT_limit = 0.5d0
+            b% s1% delta_lgTeff_limit = 1d0
+         end if
+         if (b% point_mass_i /= 2) then
+            b% s2% delta_lgT_limit = 0.5d0
+            b% s2% delta_lgTeff_limit = 1d0
+         end if
+         ! timestep controls based on variation of envelope mass of the donor
+         b% fm = 1d-1
+      ! when not in mass transfer, enforce default values for these controls
+      else if (.not. mass_transfer_check) then
+         if (b% point_mass_i /= 1) then
+            b% s1% delta_lgT_limit = binary_component_vars(1, 1)
+            b% s1% delta_lgTeff_limit = binary_component_vars(1, 2)
+         end if
+         if (b% point_mass_i /= 2) then 
+            b% s2% delta_lgT_limit = binary_component_vars(2, 1)
+            b% s2% delta_lgTeff_limit = binary_component_vars(2, 2)
+         end if
+         b% fm = binary_vars(1)
+         mass_transfer_check = .true.
+      end if
 
       end function extras_binary_finish_step
 

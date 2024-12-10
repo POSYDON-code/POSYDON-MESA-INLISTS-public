@@ -38,6 +38,7 @@ module run_star_extras
   logical :: post_AGB_check = .false.
   logical :: pre_WD_check = .false.
   real(dp) :: current_wind_prscr = -1d0
+  logical :: stripped_He_check = .false.
 
 contains
 
@@ -115,6 +116,11 @@ contains
     s% overshoot_f0_above_burn_h_core  = 8.0d-3
     s% overshoot_f0_above_burn_he_core = 8.0d-3
     s% overshoot_f0_above_burn_z_core  = 8.0d-3
+
+    ! only check for stripped He star after initial relaxtion
+    if ((.not. s% job% relax_initial_to_xaccrete) .and. (.not. s% job% relax_initial_Z)) then
+      stripped_He_check = .true.
+    end if
 
   end function extras_startup
 
@@ -998,6 +1004,41 @@ contains
        !extras_finish_step = terminate
        write(*,'(g0)') 'Reached TPAGB'
     end if
+
+    ! enable several options to help with numerical stability (esp. during rapid mass transfer)
+    if ((s% model_number == 1) .and. (.not. s% use_eps_mdot)) then
+      ! enable dedt form of the energy equation for rapid mass transfer
+      s% use_dedt_form_of_energy_eqn = .true.
+      ! enable cellwise energy exchange between in/outgoing material
+      s% use_eps_mdot = .true.
+      ! energy exchange is adiabatic (this helps w/ numerical stability)
+      s% eps_mdot_leak_frac_factor = 0d0
+      ! use lnPgas rather than density to solve energy, also helping numerical stability
+      ! this may not be required in genergal, but helps with reruns
+      call star_set_lnPgas_flag(id, .true., ierr)
+    end if
+    ! When a degenerate core is growing, turn off convective_bdy weight b/c 
+    ! it can seg fault beyond this point
+    if (s% center_gamma > 1d0 .and. s% convective_bdy_weight > 0d0) then
+        s% convective_bdy_weight = 0d0
+    end if
+    ! Turn on default (but easier to trigger) MLT++ and v_flag for stripped He star pulsations. 
+    ! A stripped He star state is set here to occur when surface mass fraction of H is less than 0.01
+    if (s% surface_h1 < 0.01d0) then
+      if (stripped_He_check) then
+        !s% gradT_excess_f2 = 1d-3
+        s% gradT_excess_lambda1 = 0.05d0 !-1
+        s% gradT_excess_lambda2 = 0.01d0
+        s% gradT_excess_beta1 = 0.05d0
+        s% gradT_excess_beta2 = 0.01d0
+        !call star_set_v_flag(id, .true., ierr)
+        stripped_He_check = .false.
+        write(*,*) '++++++++++++++++++++++++++++++++++++++++++++++'
+        write(*,*) 'stripped He star, model number ', s% model_number
+        write(*,*) '++++++++++++++++++++++++++++++++++++++++++++++'
+      end if
+    end if
+
   end function extras_finish_step
 
 
