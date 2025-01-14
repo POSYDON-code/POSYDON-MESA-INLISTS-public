@@ -37,7 +37,7 @@ module run_star_extras
   logical :: late_AGB_check = .false.
   logical :: post_AGB_check = .false.
   logical :: pre_WD_check = .false.
-  real(dp) :: current_wind_prscr = -1d0
+  real(dp) :: current_wind_prscr(2) = -1d0
 
   real(dp) :: t_spindown
 
@@ -217,7 +217,7 @@ contains
       call star_ptr(id,s,ierr)
       if(ierr/=0) return
       !here is an example for adding an extra history header item
-      !set num_cols=1 in how_many_extra_history_header_items and then unccomment these lines
+      !set num_cols=1 in how_many_extra_history_header_items and then uncomment these lines
       initial_X = 0._dp
       initial_Y = 0._dp
       initial_Z = 0._dp
@@ -537,9 +537,11 @@ contains
                            - diss_energy_H2
 
        if (adjusted_energy(k) < 0d0 .or. adjusted_energy(k) > s% energy(k)) then
-          write(*,*) "Error when computing adjusted energy in CE, ", &
-             "s% energy(k):", s% energy(k), " adjusted_energy, ", adjusted_energy(k)
-             sticking_to_energy_without_recombination_corr = .true.
+          if (.not. sticking_to_energy_without_recombination_corr) then
+             write(*,*) "Error when computing adjusted energy in CE, ", &
+                "s% energy(k):", s% energy(k), " adjusted_energy, ", adjusted_energy(k)
+          end if
+          sticking_to_energy_without_recombination_corr = .true.
        end if
 
       if(.false.) then
@@ -666,7 +668,7 @@ contains
    deallocate(adjusted_energy)
 
    names(27) = 'current_wind_prescription'
-   vals(27) = current_wind_prscr
+   vals(27) = current_wind_prscr(id)
 
 
   end subroutine data_for_extra_history_columns
@@ -931,7 +933,8 @@ contains
     call store_extra_info(s)
     if(s% x_logical_ctrl(2)) then ! this should only up for the 2 step of He star formation
       ! consistent with H-ZAMS definition from Aaron
-      if (s% power_he_burn * Lsun / s% L(1) > 0.985)  extras_finish_step = terminate
+      if ((s% power_nuc_burn * Lsun / s% L(1) > 0.985) .and. &
+          (s% power_he_burn > 0.5*s% power_nuc_burn))  extras_finish_step = terminate
       if (extras_finish_step == terminate) s% termination_code =t_extras_finish_step
     end if
 
@@ -1024,13 +1027,14 @@ contains
         write(*,'(g0)') "termination code: Single star depleted carbon, terminating from run_star_extras"
         extras_finish_step = terminate
       endif
-      if ((s% center_h1 < 1d-6) .and. (s% initial_mass <= 0.9d0) .and. (s% star_age > 2.0d10) )then
-          ! stopping criterion for TAMS, low mass stars.
-         termination_code_str(t_xtra2) = &
-           'termination code: Single, low-mass star depleted hydrogen, terminating from run_star_extras'
-         s% termination_code = t_xtra2
-         extras_finish_step = terminate
-      endif
+      ! do not stop stars for grids starting later than ZAMS
+      !if ((s% center_h1 < 1d-6) .and. (s% initial_mass <= 0.9d0) .and. (s% star_age > 2.0d10) )then
+      !    ! stopping criterion for TAMS, low mass stars.
+      !   termination_code_str(t_xtra2) = &
+      !     'termination code: Single, low-mass star depleted hydrogen, terminating from run_star_extras'
+      !   s% termination_code = t_xtra2
+      !   extras_finish_step = terminate
+      !endif
       ! check for termination due to pair-instability
       ! calculate volumetric pressure-weighted average adiabatic index -4/3, following Renzo et al. 2020
       integral_norm = 0.0d0
@@ -1074,6 +1078,28 @@ contains
        !extras_finish_step = terminate
     !   write(*,'(g0)') 'Reached TPAGB'
     !end if
+
+    ! enable several options to help with numerical stability (esp. during rapid mass transfer)
+    if ((s% model_number == 1) .and. (.not. s% use_eps_mdot)) then
+      ! enable dedt form of the energy equation for rapid mass transfer
+      s% use_dedt_form_of_energy_eqn = .true.
+
+      ! enable cellwise energy exchange between in/outgoing material
+      s% use_eps_mdot = .true.
+      ! energy exchange is adiabatic (this helps w/ numerical stability)
+      s% eps_mdot_leak_frac_factor = 0d0
+
+      ! use lnPgas rather than density to solve energy, also helping numerical stability
+      ! this may not be required in genergal, but helps with reruns
+      call star_set_lnPgas_flag(id, .true., ierr)
+    end if
+
+    ! When a degenerate core is growing, turn off convective_bdy weight b/c 
+    ! it can seg fault beyond this point
+    if (s% center_gamma > 1d0 .and. s% convective_bdy_weight > 0d0) then
+        s% convective_bdy_weight = 0d0
+    end if
+    
   end function extras_finish_step
 
 
@@ -1944,7 +1970,7 @@ subroutine loop_conv_layers(s,n_conv_regions_posydon, n_zones_of_region, bot_bdy
     !   call eval_wind_for_scheme(scheme,wind)
     !   if (dbg) write(*,*) 'using hot_wind_scheme: "' // trim(scheme) // '"'
     !low-mass stars
-    !else 
+    !else
     if(T1 <= s% hot_wind_full_on_T)then
        !evaluate cool wind
        !RGB/TPAGB switch goes here
@@ -1995,7 +2021,7 @@ subroutine loop_conv_layers(s,n_conv_regions_posydon, n_zones_of_region, bot_bdy
       real(dp) :: reimers_wind
       include 'formats'
 
-      current_wind_prscr = 0d0
+      current_wind_prscr(id) = 0d0
       wind = 4d-13*(L1*R1/M1)/(Lsun*Rsun/Msun) ! in Msun/year
       if (dbg) write(*,1) 'wind', wind
       if (wind <= 0.0d0 .or. is_bad_num(wind)) then
@@ -2029,10 +2055,10 @@ subroutine loop_conv_layers(s,n_conv_regions_posydon, n_zones_of_region, bot_bdy
          if(dbg) write(*,1) 'Dutch_wind', wind
       else if (scheme == 'Reimers') then
          wind = wind * s% Reimers_scaling_factor
-         current_wind_prscr = 4d0
+         current_wind_prscr(id) = 4d0
          if(dbg) write(*,1) 'Reimers_wind', wind
       else if (scheme == 'Vink') then
-         current_wind_prscr = 1d0
+         current_wind_prscr(id) = 1d0
          call eval_Vink_wind(wind)
          wind = wind * s% Vink_scaling_factor
          if (dbg) write(*,1) 'Vink_wind', wind
@@ -2047,15 +2073,15 @@ subroutine loop_conv_layers(s,n_conv_regions_posydon, n_zones_of_region, bot_bdy
          call eval_blocker_wind(wind)
          wind = max(reimers_wind, wind)
          if (wind > reimers_wind) then
-             current_wind_prscr = 5d0
+             current_wind_prscr(id) = 5d0
              if (dbg) write(*,1) 'Blocker_wind', wind
          else
-             current_wind_prscr = 4d0
+             current_wind_prscr(id) = 4d0
              if (dbg) write(*,1) 'Reimers_wind', wind
          end if
       else if (scheme == 'de Jager') then
          call eval_de_Jager_wind(wind)
-         current_wind_prscr = 3d0
+         current_wind_prscr(id) = 3d0
          wind = s% de_Jager_scaling_factor * wind
          if (dbg) write(*,1) 'de_Jager_wind', wind
       else if (scheme == 'van Loon') then
@@ -2074,13 +2100,17 @@ subroutine loop_conv_layers(s,n_conv_regions_posydon, n_zones_of_region, bot_bdy
       end if
 
       if(s% x_logical_ctrl(3)) then ! Belczynski+2010 LBV2 winds (eq. 8) with factor 1
-        if ((s% center_h1 < 1.0d-4) ) then  ! postMS
-            if ((s% L(1)/Lsun > 6.0d5) .and. &
-              (1.0d-5 * s% r(1)/Rsun * pow_cr((s% L(1)/Lsun),0.5d0) > 1.0d0)) then ! Humphreys-Davidson limit
-              current_wind_prscr = 6d0
-              wind  = 1.0d-4
+        if ((L1/Lsun > 6.0d5) .and. &
+          (1.0d-5 * R1/Rsun * pow_cr((L1/Lsun),0.5d0) > 1.0d0)) then ! Humphreys-Davidson limit
+          if ((T1 > s% hot_wind_full_on_T) .or. &
+              (s% he_core_mass - s% c_core_mass >= 1d-1) .or. &
+              (s% center_he4 >= 1d-6)) then ! exclude stars at TPAGB, cf. check for it in subroutine other_set_mdot
+            if (surface_h1 >= 0.1d0) then ! exclude stripped He stars
+              current_wind_prscr(id) = 6d0
+              wind  = max(1.0d-4, wind)
               if (dbg) write(*,1) 'LBV Belczynski+2010 wind', wind
             endif
+          endif
         endif
      endif
 
@@ -2184,10 +2214,10 @@ subroutine loop_conv_layers(s,n_conv_regions_posydon, n_zones_of_region, bot_bdy
       if (surface_h1 < 0.4d0) then ! helium rich Wolf-Rayet star: Nugis & Lamers
          w = 1d-11 * pow_cr(L1/Lsun,1.29d0) * pow_cr(Y,1.7d0) * sqrt(Zsurf)
          if (dbg) write(*,1) 'Dutch_wind = Nugis & Lamers', log10_cr(wind)
-        current_wind_prscr = 2d0
+         current_wind_prscr(id) = 2d0
       else
          call eval_Vink_wind(w)
-         current_wind_prscr = 1d0
+         current_wind_prscr(id) = 1d0
       end if
 
     end subroutine eval_highT_Dutch
@@ -2198,7 +2228,7 @@ subroutine loop_conv_layers(s,n_conv_regions_posydon, n_zones_of_region, bot_bdy
       include 'formats'
       if (s% Dutch_wind_lowT_scheme == 'de Jager') then
          call eval_de_Jager_wind(w)
-         current_wind_prscr = 3d0
+         current_wind_prscr(id) = 3d0
          if (dbg) write(*,1) 'Dutch_wind = de Jager', safe_log10_cr(wind), T1, T_low, T_high
       else if (s% Dutch_wind_lowT_scheme == 'van Loon') then
          call eval_van_Loon_wind(w)
