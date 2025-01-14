@@ -1884,7 +1884,16 @@
                   extras_binary_startup = terminate
                   write(*,'(g0)') "termination code: Terminate because of overflowing initial model"
                end if
-            end if
+         end if
+
+         if (b% use_other_jdot_ls) then
+
+            b% do_jdot_mb = .false.
+            b% do_tidal_sync = .true.
+            b% s1% use_other_torque = .true.
+            b% s2% use_other_torque = .true.
+
+         end if
 
       end function  extras_binary_startup
 
@@ -1912,7 +1921,7 @@
            b% s_donor => b% s2
          end if
           ! Turning back on binary orbital evolution
-          if (.not. b% s_donor% x_logical_ctrl(6)) then
+          if ((.not. b% s_donor% x_logical_ctrl(6)) .and. (.not. b% use_other_jdot_ls)) then
               b% do_jdot_mb = .true. ! turn on magnetic braking for RLOFing HMS stars only
           end if
           b% do_jdot_gr = .true.
@@ -1921,7 +1930,6 @@
           b% do_jdot_missing_wind = .true.
           b% do_j_accretion = .true.
        end if
-
 
       end function extras_binary_check_model
 
