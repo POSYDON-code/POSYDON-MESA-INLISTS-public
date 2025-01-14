@@ -70,6 +70,19 @@
          b% other_jdot_mb => mb_torque_selector
          b% other_jdot_ls => my_jdot_ls
 
+         if (b% use_other_jdot_ls) then
+
+            write(*,*) '++++++++++++++++++++++++++++++++++++++++++'
+            write(*,*) ' '
+            write(*,*) '++++++++++++++++++++++++++++++++++++++++++'
+
+            b% do_jdot_mb = .false.
+            b% do_tidal_sync = .true.
+            b% s1% use_other_torque = .true.
+            b% s2% use_other_torque = .true.
+
+         end if
+
       end subroutine extras_binary_controls
 
       subroutine my_jdot_ls(binary_id, ierr)
@@ -1884,15 +1897,6 @@
                   extras_binary_startup = terminate
                   write(*,'(g0)') "termination code: Terminate because of overflowing initial model"
                end if
-         end if
-
-         if (b% use_other_jdot_ls) then
-
-            b% do_jdot_mb = .false.
-            b% do_tidal_sync = .true.
-            b% s1% use_other_torque = .true.
-            b% s2% use_other_torque = .true.
-
          end if
 
       end function  extras_binary_startup
