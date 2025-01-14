@@ -1403,7 +1403,7 @@ contains
    real(dp) :: alfven_no_R, R_alfven
    real(dp) :: jdot_mb
    real(dp) :: period, MOI, mdot, rsurf, mstar
-   real(dp) :: ocz_bot_mass, ocz_top_mass
+   real(dp) :: ocz_bot_mass
    ierr = 0
    call star_ptr(id, s, ierr)
    if (ierr /= 0) return
@@ -1429,7 +1429,6 @@ contains
    if (s% n_conv_regions > 0) then
 
       ocz_bot_mass = s% cz_bot_mass(i)
-      ocz_top_mass = s% cz_top_mass(i)
 
       if ((s% cz_top_mass(i) / s% mstar > 0.99d0) .and. &
          ((s% cz_top_mass(i) - s% cz_bot_mass(i)) / s% mstar > 1d-11) .and. &
@@ -1498,7 +1497,7 @@ contains
    real(dp) :: rsun4, omega_3, &
                rstar_div_rsun, rad4, jdot_mb, &
                magnetic_braking_gamma, MOI, rsurf, &
-               mstar, ocz_bot_mass, ocz_top_mass
+               mstar, ocz_bot_mass
    ierr = 0
    call star_ptr(id, s, ierr)
    if (ierr /= 0) return
@@ -1520,7 +1519,6 @@ contains
    if (s% n_conv_regions > 0) then 
 
       ocz_bot_mass = s% cz_bot_mass(i)
-      ocz_top_mass = s% cz_top_mass(i)
 
       if ((s% cz_top_mass(i) / s% mstar > 0.99d0) .and. &
           ((s% cz_top_mass(i) - s% cz_bot_mass(i)) / s% mstar > 1d-11) .and. &
