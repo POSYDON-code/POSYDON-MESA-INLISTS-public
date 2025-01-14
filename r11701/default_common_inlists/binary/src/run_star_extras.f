@@ -250,7 +250,7 @@ contains
     ierr = 0
     call star_ptr(id, s, ierr)
     if (ierr /= 0) return
-    how_many_extra_history_columns = 27
+    how_many_extra_history_columns = 28
   end function how_many_extra_history_columns
 
   subroutine data_for_extra_history_columns(id, id_extra, n, names, vals, ierr)
@@ -670,6 +670,8 @@ contains
    names(27) = 'current_wind_prescription'
    vals(27) = current_wind_prscr(id)
 
+   names(28) = 'surf_extra_omegadot'
+   vals(28) = s% extra_omegadot(1)
 
   end subroutine data_for_extra_history_columns
 
