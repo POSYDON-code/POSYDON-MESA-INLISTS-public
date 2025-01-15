@@ -68,24 +68,11 @@
          b% other_rlo_mdot => my_rlo_mdot
          
          b% other_jdot_mb => mb_torque_selector
-         b% other_jdot_ls => my_jdot_ls
-
-         if (b% use_other_jdot_ls) then
-
-            write(*,*) '++++++++++++++++++++++++++++++++++++++++++'
-            write(*,*) ' '
-            write(*,*) '++++++++++++++++++++++++++++++++++++++++++'
-
-            b% do_jdot_mb = .false.
-            b% do_tidal_sync = .true.
-            b% s1% use_other_torque = .true.
-            b% s2% use_other_torque = .true.
-
-         end if
+         b% other_jdot_ls => jdot_ls_with_mb
 
       end subroutine extras_binary_controls
 
-      subroutine my_jdot_ls(binary_id, ierr)
+      subroutine jdot_ls_with_mb(binary_id, ierr)
          integer, intent(in) :: binary_id
          integer, intent(out) :: ierr
          type (binary_info), pointer :: b
@@ -138,7 +125,7 @@
 
          b% jdot_ls = b% jdot_ls / b% s_donor% dt
 
-      end subroutine my_jdot_ls
+      end subroutine jdot_ls_with_mb
 
       subroutine my_tsync(id, sync_type, Ftid, qratio, m, r_phot, osep, t_sync, ierr)
          integer, intent(in) :: id
@@ -1897,6 +1884,19 @@
                   extras_binary_startup = terminate
                   write(*,'(g0)') "termination code: Terminate because of overflowing initial model"
                end if
+         end if
+
+         if (b% use_other_jdot_ls .and. b% do_jdot_ls) then
+
+            b% do_jdot_mb = .false.
+            b% do_tidal_sync = .true.
+
+            write(*,*) '++++++++++++++++++++++++++++++++++++++++++'
+            write(*,*) 'jdot_ls_with_mb ENABLED'
+            write(*,*) 'do_jdot_mb', b% do_jdot_mb
+            write(*,*) 'do_tidal_sync', b% do_tidal_sync
+            write(*,*) '++++++++++++++++++++++++++++++++++++++++++'
+
          end if
 
       end function  extras_binary_startup
