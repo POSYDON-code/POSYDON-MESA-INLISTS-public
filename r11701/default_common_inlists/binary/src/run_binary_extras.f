@@ -1886,7 +1886,7 @@
                end if
          end if
 
-         if (b% s1% use_other_torque .or b% s2% use_other_torque) then
+         if (b% s1% use_other_torque .or. b% s2% use_other_torque) then
 
             b% do_jdot_mb = .false.
             b% do_tidal_sync = .true.
