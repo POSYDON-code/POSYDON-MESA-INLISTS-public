@@ -1892,8 +1892,6 @@
             ! ensure these options are set
             b% do_jdot_mb = .false.
             b% do_tidal_sync = .true.
-            !b% use_other_jdot_ls = .true.
-            !b% do_jdot_ls = .true.
 
             write(*,*) '++++++++++++++++++++++++++++++++++++++++++'
             write(*,*) 'use_other_jdot_ls (jdot_ls_with_mb) = ', b% use_other_jdot_ls
@@ -1901,8 +1899,15 @@
             write(*,*) 'set do_tidal_sync = ', b% do_tidal_sync
             write(*,*) '++++++++++++++++++++++++++++++++++++++++++'
 
-           b% s1% use_other_torque = .true.
-           b% s2% use_other_torque = .true.
+            b% s1% use_other_torque = .true.
+            write(*,*) '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+            write(*,*) 'Magnetic braking torque enabled for star 1'
+            write(*,*) '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+
+            b% s2% use_other_torque = .true.
+            write(*,*) '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+            write(*,*) 'Magnetic braking torque enabled for star 2'
+            write(*,*) '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
 
          end if
 

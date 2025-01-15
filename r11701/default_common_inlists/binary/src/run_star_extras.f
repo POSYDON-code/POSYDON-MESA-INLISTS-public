@@ -72,27 +72,32 @@ contains
     !if (s% use_other_torque) then
       if (s% x_character_ctrl(1) == 'g18') then
         write(*,*) '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-        write(*,*) 'Garraffo+ 2016/18 torque enabled (star ', id, ').'
+        write(*,*) 'Garraffo+ 2016/18 torque seletected (star ', id, ').'
+        write(*,*) '(Not yet enabled)'
         write(*,*) '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
         s% other_torque => garraffo_torque
       else if (s% x_character_ctrl(1) == 'm15') then
          write(*,*) '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-         write(*,*) 'Matt+ 2015 torque enabled (star ', id, ').'
+         write(*,*) 'Matt+ 2015 torque seletected (star ', id, ').'
+         write(*,*) '(Not yet enabled)'
          write(*,*) '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
          s% other_torque => matt_torque
       else if (s% x_character_ctrl(1) == 'carb') then
          write(*,*) '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-         write(*,*) 'Van & Ivanova 2019 (CARB) torque enabled (star ', id, ').'
+         write(*,*) 'Van & Ivanova 2019 (CARB) torque seletected (star ', id, ').'
+         write(*,*) '(Not yet enabled)'
          write(*,*) '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
          s% other_torque => carb_torque
       else if (s% x_character_ctrl(1) == 'rvj83') then
          write(*,*) '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-         write(*,*) 'Rappaport, Verbunt, & Joss 1983 torque enabled (star ', id, ').'
+         write(*,*) 'Rappaport, Verbunt, & Joss 1983 torque seletected (star ', id, ').'
+         write(*,*) '(Not yet enabled)'
          write(*,*) '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
          s% other_torque => rvj_torque
       else 
          write(*,*) '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
          write(*,*) 'WARNING: defaulting to Matt+ 2015 torque (star ', id, ').'
+         write(*,*) '(Not yet enabled)'
          write(*,*) 'To select a different magnetic braking law, set x_character_ctrl equal to one of the following:'
          write(*,*) '  >> x_character_ctrl = ''g18'' for Garraffo+ 2016/18 torque'
          write(*,*) '  >> x_character_ctrl = ''m15'' for Matt+ 2015 torque'
@@ -150,43 +155,6 @@ contains
     s% overshoot_f0_above_burn_h_core  = 8.0d-3
     s% overshoot_f0_above_burn_he_core = 8.0d-3
     s% overshoot_f0_above_burn_z_core  = 8.0d-3
-
-
-    write(*,*) 'DEBUG: extras_startup'
-
-    if (s% use_other_torque) then
-      if (s% x_character_ctrl(1) == 'g18') then
-         write(*,*) '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-         write(*,*) 'Garraffo+ 2016/18 torque enabled (star ', id, ').'
-         write(*,*) '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-         !s% other_torque => garraffo_torque
-      else if (s% x_character_ctrl(1) == 'm15') then
-         write(*,*) '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-         write(*,*) 'Matt+ 2015 torque enabled (star ', id, ').'
-         write(*,*) '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-         !s% other_torque => matt_torque
-      else if (s% x_character_ctrl(1) == 'carb') then
-         write(*,*) '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-         write(*,*) 'Van & Ivanova 2019 (CARB) torque enabled (star ', id, ').'
-         write(*,*) '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-         !s% other_torque => carb_torque
-      else if (s% x_character_ctrl(1) == 'rvj83') then
-         write(*,*) '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-         write(*,*) 'Rappaport, Verbunt, & Joss 1983 torque enabled (star ', id, ').'
-         write(*,*) '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-         !s% other_torque => rvj_torque
-      else 
-         write(*,*) '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-         write(*,*) 'WARNING: defaulting to Matt+ 2015 torque (star ', id, ').'
-         write(*,*) 'To select a different magnetic braking law, set x_character_ctrl equal to one of the following:'
-         write(*,*) '  >> x_character_ctrl = ''g18'' for Garraffo+ 2016/18 torque'
-         write(*,*) '  >> x_character_ctrl = ''m15'' for Matt+ 2015 torque'
-         write(*,*) '  >> x_character_ctrl = ''carb'' for Van & Ivanova 2019 (CARB) torque'
-         write(*,*) '  >> x_character_ctrl = ''rvj83'' for Rappaport, Verbunt, & Joss 1983 torque'
-         write(*,*) '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-         !s% other_torque => matt_torque
-      end if
-    end if
 
   end function extras_startup
 
