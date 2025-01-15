@@ -151,8 +151,11 @@ contains
     s% overshoot_f0_above_burn_he_core = 8.0d-3
     s% overshoot_f0_above_burn_z_core  = 8.0d-3
 
+
+    write(*,*) 'DEBUG: extras_startup'
+
     if (s% use_other_torque) then
-      if (b% s% x_character_ctrl(1) == 'g18') then
+      if (s% x_character_ctrl(1) == 'g18') then
          write(*,*) '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
          write(*,*) 'Garraffo+ 2016/18 torque enabled (star ', id, ').'
          write(*,*) '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
