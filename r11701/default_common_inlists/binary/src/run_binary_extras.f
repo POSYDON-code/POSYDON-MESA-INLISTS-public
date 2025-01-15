@@ -1886,18 +1886,23 @@
                end if
          end if
 
-         if (b% s1% use_other_torque .or. b% s2% use_other_torque) then
+         !if (b% s1% use_other_torque .or. b% s2% use_other_torque) then
+         if (b% do_jdot_ls .and. b% use_other_jdot_ls) then
 
+            ! ensure these options are set
             b% do_jdot_mb = .false.
             b% do_tidal_sync = .true.
-            b% use_other_jdot_ls = .true.
-            b% do_jdot_ls = .true.
+            !b% use_other_jdot_ls = .true.
+            !b% do_jdot_ls = .true.
 
             write(*,*) '++++++++++++++++++++++++++++++++++++++++++'
-            write(*,*) 'jdot_ls_with_mb', b% use_other_jdot_ls
-            write(*,*) 'do_jdot_mb', b% do_jdot_mb
-            write(*,*) 'do_tidal_sync', b% do_tidal_sync
+            write(*,*) 'use_other_jdot_ls (jdot_ls_with_mb) = ', b% use_other_jdot_ls
+            write(*,*) 'set do_jdot_mb = ', b% do_jdot_mb
+            write(*,*) 'set do_tidal_sync = ', b% do_tidal_sync
             write(*,*) '++++++++++++++++++++++++++++++++++++++++++'
+
+           b% s1% use_other_torque = .true.
+           b% s2% use_other_torque = .true.
 
          end if
 
