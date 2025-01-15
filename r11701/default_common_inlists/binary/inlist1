@@ -132,9 +132,6 @@
                         !we want a value > 0 so that mesh_delta_coeff becomes much lower (i.e. higher spatial resolution)
                         !when Pgas/(Prad+Pgas) becomes low (close to the surface))
 
-      ! allows magnetic braking to operate
-      use_other_torque = .true.
-
       D_visc_factor = 0.0d0
       D_ST_factor = 0.0d0
       D_SH_factor = 0.0d0 !this is different from MIST2

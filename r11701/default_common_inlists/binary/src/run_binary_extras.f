@@ -1886,7 +1886,7 @@
                end if
          end if
 
-         if (b% use_other_jdot_ls .and. b% do_jdot_ls) then
+         if (b% do_jdot_ls .and. b% use_other_jdot_ls) then
 
             b% do_jdot_mb = .false.
             b% do_tidal_sync = .true.
