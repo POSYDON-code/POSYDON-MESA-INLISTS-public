@@ -48,8 +48,12 @@ contains
     integer, intent(in) :: id
     integer, intent(out) :: ierr
     type (star_info), pointer :: s
+    type (binary_info), pointer :: b
     ierr = 0
     call star_ptr(id, s, ierr)
+    if (ierr /= 0) return
+
+    call binary_ptr(s% binary_id, b, ierr)
     if (ierr /= 0) return
 
     !s% other_mlt => my_other_mlt
@@ -68,8 +72,18 @@ contains
   !  s% data_for_extra_profile_header_items => data_for_extra_profile_header_items
     s% job% warn_run_star_extras =.false.
 
-
     original_diffusion_dt_limit = s% diffusion_dt_limit
+
+    ! if we are using jdot_ls + MB, enable magnetic braking
+    if (b% do_jdot_ls .and. b% use_other_jdot_ls) then
+
+      s% use_other_torque = .true.
+
+      write(*,*) '++++++++++++++++++++++++++++++++++++++++++'
+      write(*,*) 'use_other_torque', s% use_other_torque
+      write(*,*) '++++++++++++++++++++++++++++++++++++++++++'
+
+    end if
 
     if (s% use_other_torque) then
       if (s% x_character_ctrl(1) == 'g18') then
@@ -113,14 +127,11 @@ contains
     logical, intent(in) :: restart
     integer, intent(out) :: ierr
     type (star_info), pointer :: s
-    type (binary_info), pointer :: b
     integer :: j, cid
     real(dp) :: frac, vct30, vct100
     character(len=256) :: photosphere_summary, tau100_summary
     ierr = 0
     call star_ptr(id, s, ierr)
-    if (ierr /= 0) return
-    call binary_ptr(s% binary_id, b, ierr)
     if (ierr /= 0) return
     extras_startup = 0
     if (.not. restart) then
@@ -155,17 +166,6 @@ contains
     s% overshoot_f0_above_burn_h_core  = 8.0d-3
     s% overshoot_f0_above_burn_he_core = 8.0d-3
     s% overshoot_f0_above_burn_z_core  = 8.0d-3
-
-    ! if we are using jdot_ls + MB, enable magnetic braking
-    if (b% do_jdot_ls .and. b% use_other_jdot_ls) then
-
-      s% use_other_torque = .true.
-
-      write(*,*) '++++++++++++++++++++++++++++++++++++++++++'
-      write(*,*) 'use_other_torque', s% use_other_torque
-      write(*,*) '++++++++++++++++++++++++++++++++++++++++++'
-
-    end if
 
   end function extras_startup
 
