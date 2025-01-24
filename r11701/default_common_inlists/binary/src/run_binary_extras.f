@@ -107,6 +107,7 @@
 
          real(dp) :: jdot_wind_donor, jdot_wind_accretor, jdot_RLOF_donor, jdot_RLOF_accretor
          real(dp) :: adot_rlo, jdot_ecc_RLOF_accretor, edot_RLOF, jdot_rlo
+         real(dp) :: f_, X_L1
 
          type (binary_info), pointer :: b
          ierr = 0
@@ -137,15 +138,20 @@
              sqrt(b% s_donor% cgrav(1) * (b% m(1) + b% m(2)) * b% separation)
          
          ! Now we calculate the Jdot_ml from eccentric RLOF
-         !========================!
-         write(*,*) "calling my jdot"
-         !========================!
+         
 
          ! Get relevant quantities - cgs
          osep = b% separation
          q = b% m(b% d_i) / b% m(b% a_i)
          M = b% m(b% d_i) + b% m(b% a_i)
-         rA1 = eval_rlobe(b% m(b% d_i), b% m(b% a_i), osep)
+         ! The location of the L1 point in eccentric orbits in units of orbital separation
+         ! from Sepinsky+2007b: Eq. A15
+         ! Using P_rot_div_P_orb_1 from private/binary_history.f90
+         f_ = 2d0 * pi / b% s1% omega_avg_surf / b% period
+         X_L1 = 0.529d0 + 0.231d0 * log10_cr(q) - f_*f_*(0.031d0 + 0.025d0 * b% eccentricity) * (1.0d0 + 0.4d0*log10_cr(q))
+
+         ! rA1 = eval_rlobe(b% m(b% d_i), b% m(b% a_i), osep)
+         rA1 =  X_L1 * osep * (1 - b% eccentricity)
          gamma_iso = q  ! isotropic re-emission, lost from accretor
          ang_mom_j = b% angular_momentum_j
          m1dot_rlo = b% mtransfer_rate
@@ -205,6 +211,7 @@
          integer, intent(out) :: ierr
          real(dp) :: osep, q, rA1, m2dot_rlo, m2dot_wind, gamma_fast, gamma_iso, M, ang_mom_j
          real(dp) :: m1dot_rlo, xfer_frac_rlo, edot_rlo, edot_wind
+         real(dp) :: f_, X_L1
          type (binary_info), pointer :: b
          ierr = 0
          call binary_ptr(binary_id, b, ierr)
@@ -219,7 +226,14 @@
          osep = b% separation
          q = b% m(b% d_i) / b% m(b% a_i)
          M = b% m(b% d_i) + b% m(b% a_i)
-         rA1 = eval_rlobe(b% m(b% d_i), b% m(b% a_i), osep)
+         ! The location of the L1 point in eccentric orbits in units of orbital separation
+         ! from Sepinsky+2007b: Eq. A15
+         ! Using P_rot_div_P_orb_1 from private/binary_history.f90
+         f_ = 2d0 * pi / b% s1% omega_avg_surf / b% period
+         X_L1 = 0.529d0 + 0.231d0 * log10_cr(q) - f_*f_*(0.031d0 + 0.025d0 * b% eccentricity) * (1.0d0 + 0.4d0*log10_cr(q))
+
+         ! rA1 = eval_rlobe(b% m(b% d_i), b% m(b% a_i), osep)
+         rA1 =  X_L1 * osep * (1 - b% eccentricity)
          gamma_iso = q  ! isotropic re-emission, lost from accretor
 
          xfer_frac_rlo = b% xfer_fraction
