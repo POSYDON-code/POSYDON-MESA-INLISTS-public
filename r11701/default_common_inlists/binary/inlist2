@@ -80,7 +80,7 @@
       !WHEN TO STOP
       gamma_center_limit = 10d0 ! Crystallization begins ==> white dwarf
       logQ_limit = 58d0 ! Full extent of the EOS parameter space
-      max_age = 1.4e10 ! Hubble time
+      max_age = -1 ! no stopping to allow grids being used later than ZAMS
 
       !PHYSICS
       which_atm_option = 'simple_photosphere'
@@ -246,18 +246,18 @@
       delta_lg_XO_cntr_min   = -3.0d0
       delta_lg_XO_cntr_hard_limit = 0.02d0
 
-! limit changes in the timestep
-     timestep_factor_for_retries = 0.75d0
+      ! limit changes in the timestep
+      timestep_factor_for_retries = 0.75d0
 
-! HRD, Radius resolution
-delta_HR_ds_L = 0.125d0
- delta_HR_ds_Teff = 2.0d0
-    !### delta_HR_limit
-    !### delta_HR_hard_limit
-    ! limit for dHR (negative means no limit)
-    !     dHR = sqrt((delta_HR_ds_L*dlgL)**2 + (delta_HR_ds_Teff*dlgTeff)**2)
- delta_HR_limit = 0.1d0
- delta_HR_hard_limit = 0.2d0
+      ! HRD, Radius resolution
+      delta_HR_ds_L = 0.125d0
+      delta_HR_ds_Teff = 2.0d0
+      !### delta_HR_limit
+      !### delta_HR_hard_limit
+      ! limit for dHR (negative means no limit)
+      !     dHR = sqrt((delta_HR_ds_L*dlgL)**2 + (delta_HR_ds_Teff*dlgTeff)**2)
+      delta_HR_limit = 0.1d0
+      delta_HR_hard_limit = 0.2d0
 
       ! Turn on eq.8 Belczynski+2010 LBV2 winds  with factor 1 (10-4 Msun/yr) to replace other winds for postMS stars in Humphreys-Davidson limit
       x_logical_ctrl(3) = .true.
@@ -265,4 +265,8 @@ delta_HR_ds_L = 0.125d0
       x_logical_ctrl(4) = .false.
       ! skip calculating implicit mdot
       x_logical_ctrl(5) = .true.
+
+      ! a string that specifies which magnetic braking prescription to use, out of several implemented (see run_star_extras.f for more details)
+      x_character_ctrl(1) = 'g18'
+
  / ! end of controls namelist
