@@ -120,7 +120,7 @@
          osep = b% separation
          q = b% m(b% d_i) / b% m(b% a_i)
          M = b% m(b% d_i) + b% m(b% a_i)
-         rA1 = eval_rlobe(b% m(b% d_i), b% m(b% a_i), osep*(1-b% eccentricity))
+         rA1 = eval_rlobe(b% m(b% d_i), b% m(b% a_i), osep*(1d0-b% eccentricity))
          gamma_iso = q  ! isotropic re-emission, lost from accretor
          ang_mom_j = b% angular_momentum_j
          m1dot_rlo = b% mtransfer_rate
@@ -179,7 +179,7 @@
          osep = b% separation
          q = b% m(b% d_i) / b% m(b% a_i)
          M = b% m(b% d_i) + b% m(b% a_i)
-         rA1 = eval_rlobe(b% m(b% d_i), b% m(b% a_i), osep*(1-b% eccentricity))
+         rA1 = eval_rlobe(b% m(b% d_i), b% m(b% a_i), osep*(1d0 - b% eccentricity))
          gamma_iso = q  ! isotropic re-emission, lost from accretor
 
          xfer_frac_rlo = b% xfer_fraction
