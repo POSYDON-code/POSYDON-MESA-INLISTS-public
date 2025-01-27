@@ -150,9 +150,9 @@
          f_ = 2d0 * pi / b% s1% omega_avg_surf / b% period
          X_L1 = 0.529d0 + 0.231d0 * log10_cr(q) - f_*f_*(0.031d0 + 0.025d0 * b% eccentricity) * (1.0d0 + 0.4d0*log10_cr(q))
 
-         ! rA1 = eval_rlobe(b% m(b% d_i), b% m(b% a_i), osep)
-         rA1 =  X_L1 * osep * (1 - b% eccentricity)
-         gamma_iso = q  ! isotropic re-emission, lost from accretor
+         ! rA1 =  X_L1 * osep * (1d0 - b% eccentricity)
+         rA1 = eval_rlobe(b% m(b% d_i), b% m(b% a_i), osep*(1d0 - b% eccentricity) )
+	 gamma_iso = q  ! isotropic re-emission, lost from accretor
          ang_mom_j = b% angular_momentum_j
          m1dot_rlo = b% mtransfer_rate
          m2dot_rlo = - b% xfer_fraction * m1dot_rlo
@@ -232,8 +232,8 @@
          f_ = 2d0 * pi / b% s1% omega_avg_surf / b% period
          X_L1 = 0.529d0 + 0.231d0 * log10_cr(q) - f_*f_*(0.031d0 + 0.025d0 * b% eccentricity) * (1.0d0 + 0.4d0*log10_cr(q))
 
-         ! rA1 = eval_rlobe(b% m(b% d_i), b% m(b% a_i), osep)
-         rA1 =  X_L1 * osep * (1 - b% eccentricity)
+         ! rA1 =  X_L1 * osep * (1 - b% eccentricity)
+	 rA1 = eval_rlobe(b% m(b% d_i), b% m(b% a_i), osep*(1d0 - b% eccentricity))
          gamma_iso = q  ! isotropic re-emission, lost from accretor
 
          xfer_frac_rlo = b% xfer_fraction
