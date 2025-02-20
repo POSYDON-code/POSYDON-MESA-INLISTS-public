@@ -87,14 +87,14 @@
          if (b% r(b% a_i) < min_r) then
             b% accretion_mode = 2
             b% s_accretor% accreted_material_j = &
-                (0.9d0-b% s_accretor% omega_avg_surf/b% s_accretor% omega_crit_avg_surf)/0.9d0 *&
-	        sqrt(b% s_accretor% cgrav(1) * b% m(b% a_i) * b% r(b% a_i))
+		(0.81d0-pow2(b% s_accretor% omega_avg_surf/b% s_accretor% omega_crit_avg_surf))/0.81d0 *&
+		sqrt(b% s_accretor% cgrav(1) * b% m(b% a_i) * b% r(b% a_i))
 	 write(*,*) 'j1', b% r(b% a_i), min_r, b% s_accretor% omega_avg_surf/b% s_accretor% omega_crit_avg_surf,&
                      b% s_accretor% accreted_material_j
 	 else
             b% accretion_mode = 1
 	    b% s_accretor% accreted_material_j = &
-                (0.9d0-b% s_accretor% omega_avg_surf/b% s_accretor% omega_crit_avg_surf)/0.9d0 *&
+                (0.81d0-pow2(b% s_accretor% omega_avg_surf/b% s_accretor% omega_crit_avg_surf))/0.81d0 *&
 	        sqrt(b% s_accretor% cgrav(1) * b% m(b% a_i) * 1.7d0*min_r)
 	 write(*,*) 'j2', b% r(b% a_i), min_r, b% s_accretor% omega_avg_surf/b% s_accretor% omega_crit_avg_surf,&
                      b% s_accretor% accreted_material_j
@@ -1560,15 +1560,15 @@
          qratio = min(max(qratio,0.0667d0),15d0)
 	 min_r = 0.0425d0*b% separation*pow_cr(qratio+qratio*qratio, 0.25d0)
          if (b% r(b% a_i) < min_r) then
-	     b% mass_transfer_beta = b% s_accretor% omega_avg_surf/0.9d0/b% s_accretor% omega_crit_avg_surf/&
+	     b% mass_transfer_beta = pow2(b% s_accretor% omega_avg_surf/b% s_accretor% omega_crit_avg_surf)/0.81d0/&
                                (sqrt(1.7*min_r/b% r(b% a_i))-&
-			       (1-b% s_accretor% omega_avg_surf/0.9d0/b% s_accretor% omega_crit_avg_surf))
+			       (1-pow2(b% s_accretor% omega_avg_surf/b% s_accretor% omega_crit_avg_surf)/0.81d0))
 	     write(*,*) 'm1', b% r(b% a_i), min_r, b% rl(b% a_i),b% s_accretor% omega_avg_surf/b% s_accretor% omega_crit_avg_surf,&
                      b% mass_transfer_beta
 	 else   
-             b% mass_transfer_beta = b% s_accretor% omega_avg_surf/0.9d0/b% s_accretor% omega_crit_avg_surf/&
+             b% mass_transfer_beta = pow2(b% s_accretor% omega_avg_surf/b% s_accretor% omega_crit_avg_surf)/0.81d0/&
                                (sqrt(b% rl(b% a_i)/ (1.7d0*min_r))-&
-			       (1-b% s_accretor% omega_avg_surf/0.9d0/b% s_accretor% omega_crit_avg_surf))
+			       (1-pow2(b% s_accretor% omega_avg_surf/b% s_accretor% omega_crit_avg_surf)/0.81d0))
 	     write(*,*) 'm2', b% r(b% a_i), min_r, b% rl(b% a_i),b% s_accretor% omega_avg_surf/b% s_accretor% omega_crit_avg_surf,&
                      b% mass_transfer_beta
 	 end if
