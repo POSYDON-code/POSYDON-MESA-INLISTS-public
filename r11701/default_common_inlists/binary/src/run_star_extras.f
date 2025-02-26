@@ -1031,7 +1031,7 @@ contains
         s% gradT_excess_lambda2 = 0.01d0
         s% gradT_excess_beta1 = 0.05d0
         s% gradT_excess_beta2 = 0.01d0
-        !call star_set_v_flag(id, .true., ierr)
+        call star_set_v_flag(id, .true., ierr)
         stripped_He_check = .false.
         write(*,*) '++++++++++++++++++++++++++++++++++++++++++++++'
         write(*,*) 'stripped He star, model number ', s% model_number
